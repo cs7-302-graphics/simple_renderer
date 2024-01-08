@@ -5,7 +5,7 @@ Some sample scenes are given in the <a href="https://github.com/cs7-302-graphics
 Instructions to clone, compile and run are given below.
 
 ## Cloning this repo
-```git clone --recursive https://github.com/cs7-302-graphics/code```
+```git clone --recursive https://github.com/cs7-302-graphics/simple_renderer```
 Do not forget the `--recursive` flag!
 
 ## Compiling
