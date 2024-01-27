@@ -5,6 +5,7 @@
 
 struct Tri {
     Vector3f v1, v2, v3;
+    Vector2f uv1, uv2, uv3;
     Vector3f normal;
     Vector3f centroid;
     

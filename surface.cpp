@@ -98,6 +98,11 @@ std::vector<Surface> createSurfaces(std::string pathToObj, bool isLight, uint32_
             triangle.v1 = vertices[0];
             triangle.v2 = vertices[1];
             triangle.v3 = vertices[2];
+
+            triangle.uv1 = uvs[0];
+            triangle.uv2 = uvs[1];
+            triangle.uv3 = uvs[2];
+
             triangle.normal = Normalize(normals[0] + normals[1] + normals[2]);
             triangle.centroid = (triangle.v1 + triangle.v2 + triangle.v3) / 3.f;
 
