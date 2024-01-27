@@ -165,6 +165,9 @@ std::vector<Surface> createSurfaces(std::string pathToObj, bool isLight, uint32_
                 surf.alpha = mat.specular[0];
                 if (mat.alpha_texname != "")
                     surf.alphaTexture = Texture(objDirectory + "/" + mat.alpha_texname);
+            } else {
+                // Assign a default diffuse color of (1,1,1)
+                surf.diffuse = Vector3f(1, 1, 1);
             }
         }
 
