@@ -46,9 +46,13 @@ public:
     }
     bool operator==(const Vector2<T>& v) const { return x == v.x && y == v.y; }
     bool operator!=(const Vector2<T>& v) const { return x != v.x || y != v.y; }
+
     template <typename U>
     Vector2<T> operator*(U f) const {
         return Vector2<T>(f * x, f * y);
+    }
+    Vector2<T> operator*(const Vector2<T>& v) const {
+        return Vector2<T>(v.x * x, v.y * y);
     }
 
     template <typename U>
@@ -57,10 +61,19 @@ public:
         y *= f;
         return *this;
     }
+    Vector2<T>& operator*=(const Vector2<T>& v) {
+        x *= v.x;
+        y *= v.y;
+        return *this;
+    }
+
     template <typename U>
     Vector2<T> operator/(U f) const {
         float inv = (float)1 / f;
         return Vector2<T>(x * inv, y * inv);
+    }
+    Vector2<T> operator/(const Vector2<T>& v) const {
+        return Vector2<T>(x / v.x, y / v.y);
     }
 
     template <typename U>
@@ -70,6 +83,12 @@ public:
         y *= inv;
         return *this;
     }
+    Vector2<T>& operator/=(const Vector2<T>& v) {
+        x /= v.x;
+        y /= v.y;
+        return *this;
+    }
+
     Vector2<T> operator-() const { return Vector2<T>(-x, -y); }
     T operator[](int i) const {
         if (i == 0) return x;
@@ -129,10 +148,15 @@ public:
     bool operator!=(const Vector3<T>& v) const {
         return x != v.x || y != v.y || z != v.z;
     }
+
     template <typename U>
     Vector3<T> operator*(U s) const {
         return Vector3<T>(s * x, s * y, s * z);
     }
+    Vector3<T> operator*(const Vector3<T>& v) const {
+        return Vector3<T>(v.x * x, v.y * y, v.z * z);
+    }
+
     template <typename U>
     Vector3<T>& operator*=(U s) {
         x *= s;
@@ -140,10 +164,20 @@ public:
         z *= s;
         return *this;
     }
+    Vector3<T>& operator*=(const Vector3<T>& v) {
+        x *= v.x;
+        y *= v.y;
+        z *= v.z;
+        return *this;
+    }
+
     template <typename U>
     Vector3<T> operator/(U f) const {
         float inv = (float)1 / f;
         return Vector3<T>(x * inv, y * inv, z * inv);
+    }
+    Vector3<T> operator/(const Vector3<T>& v) const {
+        return Vector3<T>(x / v.x, y / v.y, z / v.z);
     }
 
     template <typename U>
@@ -154,6 +188,13 @@ public:
         z *= inv;
         return *this;
     }
+    Vector3<T>& operator/=(const Vector3<T>& v) {
+        x /= v.x;
+        y /= v.y;
+        z /= v.z;
+        return *this;
+    }
+
     Vector3<T> operator-() const { return Vector3<T>(-x, -y, -z); }
     float LengthSquared() const { return x * x + y * y + z * z; }
     float Length() const { return std::sqrt(LengthSquared()); }
@@ -171,6 +212,7 @@ template <typename T, typename U>
 inline Vector3<T> operator*(U s, const Vector3<T>& v) {
     return v * s;
 }
+
 template <typename T>
 Vector3<T> Abs(const Vector3<T>& v) {
     return Vector3<T>(std::abs(v.x), std::abs(v.y), std::abs(v.z));
@@ -197,6 +239,11 @@ inline Vector3<T> Cross(const Vector3<T>& v1, const Vector3<T>& v2) {
 template <typename T>
 inline Vector3<T> Normalize(const Vector3<T>& v) {
     return v / v.Length();
+}
+
+template <typename T, typename U>
+inline Vector2<T> operator*(U f, const Vector2<T>& v) {
+    return v * f;
 }
 
 template <typename T>

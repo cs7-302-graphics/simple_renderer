@@ -35,7 +35,7 @@ int main(int argc, char **argv)
 
     Integrator rayTracer(scene);
     auto renderTime = rayTracer.render();
-
+    
     std::cout << "Render Time: " << std::to_string(renderTime / 1000.f) << " ms" << std::endl;
     rayTracer.outputImage.save(argv[2]);
 

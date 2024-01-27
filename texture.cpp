@@ -47,9 +47,9 @@ void Texture::writePixelColor(Vector3f color, int x, int y)
     if (this->type == TextureType::UNSIGNED_INTEGER_ALPHA) {
         uint32_t* dpointer = (uint32_t*)this->data;
 
-        uint32_t r = static_cast<uint32_t>(color.x * 255.0f);
-        uint32_t g = static_cast<uint32_t>(color.y * 255.0f) << 8;
-        uint32_t b = static_cast<uint32_t>(color.z * 255.0f) << 16;
+        uint32_t r = static_cast<uint32_t>(std::min(color.x * 255.0f, 255.f));
+        uint32_t g = static_cast<uint32_t>(std::min(color.y * 255.0f, 255.f)) << 8;
+        uint32_t b = static_cast<uint32_t>(std::min(color.z * 255.0f, 255.f)) << 16;
         uint32_t a = 255 << 24;
 
         uint32_t final = r | g | b | a;
