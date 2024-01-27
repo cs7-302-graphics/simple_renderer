@@ -58,6 +58,28 @@ void Texture::writePixelColor(Vector3f color, int x, int y)
     }
 }
 
+/*
+Reads the color defined at integer coordinates 'x,y'.
+The top left corner of the texture is mapped to '0,0'.
+*/
+Vector3f Texture::loadPixelColor(int x, int y) {
+    Vector3f rval(0.f, 0.f, 0.f);
+    if (this->type == TextureType::UNSIGNED_INTEGER_ALPHA) {
+        uint32_t* dpointer = (uint32_t*)this->data;
+
+        uint32_t val = dpointer[y * this->resolution.x + x];
+        uint32_t r = (val >> 0) & 255u;
+        uint32_t g = (val >> 8) & 255u;
+        uint32_t b = (val >> 16) & 255u;
+
+        rval.x = r / 255.f;
+        rval.y = g / 255.f;
+        rval.z = b / 255.f;
+    }
+
+    return rval;
+}
+
 void Texture::loadJpg(std::string pathToJpg)
 {
     Vector2i res;
