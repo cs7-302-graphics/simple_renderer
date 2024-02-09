@@ -2,10 +2,12 @@
 
 #include "camera.h"
 #include "surface.h"
+#include "light.h"
 
 struct Scene {
     std::vector<Surface> surfaces;
     std::vector<uint32_t> surfaceIdxs;
+    std::vector<Light> lights;
     Camera camera;
     Vector2i imageResolution;
 
@@ -26,4 +28,5 @@ struct Scene {
     void intersectBVH(uint32_t nodeIdx, Ray& ray, Interaction& si);
 
     Interaction rayIntersect(Ray& ray);
+    Interaction rayEmitterIntersect(Ray& ray);
 };

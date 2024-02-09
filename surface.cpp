@@ -1,3 +1,4 @@
+#include "bsdf.h"
 #include "surface.h"
 
 #define TINYOBJLOADER_IMPLEMENTATION
@@ -156,23 +157,30 @@ std::vector<Surface> createSurfaces(std::string pathToObj, bool isLight, uint32_
 
         if (materialIds.size() == 0) {
             std::cerr << "One of the meshes has no material definition, may cause unexpected behaviour." << std::endl;
-        }
-        else {
+        } else {
             // Load textures from Materials
             auto matId = *materialIds.begin();
             if (matId != -1) {
                 auto mat = materials[matId];
 
-                surf.diffuse = Vector3f(mat.diffuse[0], mat.diffuse[1], mat.diffuse[2]);
-                if (mat.diffuse_texname != "")
-                    surf.diffuseTexture = Texture(objDirectory + "/" + mat.diffuse_texname);
-
-                surf.alpha = mat.specular[0];
-                if (mat.alpha_texname != "")
-                    surf.alphaTexture = Texture(objDirectory + "/" + mat.alpha_texname);
+                Vector3f diffuse(mat.diffuse[0], mat.diffuse[1], mat.diffuse[2]);
+                float alpha = mat.specular[0];
+                std::string diffuseTexname("");
+                if (mat.diffuse_texname != "") {
+                    diffuseTexname = objDirectory + "/" + mat.diffuse_texname;
+                }
+                std::string alphaTexname("");
+                if (mat.specular_texname != "") {
+                    alphaTexname = objDirectory + "/" + mat.alpha_texname;
+                }
+                surf.bsdf = BSDF(
+                    diffuseTexname,
+                    alphaTexname,
+                    diffuse,
+                    alpha
+                );
             } else {
-                // Assign a default diffuse color of (1,1,1)
-                surf.diffuse = Vector3f(1, 1, 1);
+                surf.bsdf = BSDF("", "", Vector3f(1, 1, 1), 1);
             }
         }
 
@@ -190,10 +198,6 @@ std::vector<Surface> createSurfaces(std::string pathToObj, bool isLight, uint32_
 
     return surfaces;
 }
-
-bool Surface::hasDiffuseTexture() { return this->diffuseTexture.data != 0; }
-
-bool Surface::hasAlphaTexture() { return this->alphaTexture.data != 0; }
 
 Interaction Surface::rayPlaneIntersect(Ray ray, Vector3f p, Vector3f n)
 {
@@ -242,7 +246,7 @@ Interaction Surface::rayTriangleIntersect(Ray ray, Vector3f v1, Vector3f v2, Vec
             edge3 = Dot(nIp, nTri) > 0;
         }
 
-        if (edge1 && edge2 && edge3) {
+        if (edge1 && edge2 && edge3 && si.t >= 0.f) {
             // Intersected triangle!
             si.didIntersect = true;
         }
@@ -352,16 +356,41 @@ void Surface::intersectBVH(uint32_t nodeIdx, Ray& ray, Interaction& si)
     if (node.primCount != 0) {
         // Leaf
         for (uint32_t i = 0; i < node.primCount; i++) {
+            Vector3f v1 = this->tris[this->getIdx(i + node.firstPrim)].v1;
+            Vector3f v2 = this->tris[this->getIdx(i + node.firstPrim)].v2;
+            Vector3f v3 = this->tris[this->getIdx(i + node.firstPrim)].v3;
+            Vector3f normal = this->tris[this->getIdx(i + node.firstPrim)].normal;
+
+            Vector2f uv1 = this->tris[this->getIdx(i + node.firstPrim)].uv1;
+            Vector2f uv2 = this->tris[this->getIdx(i + node.firstPrim)].uv2;
+            Vector2f uv3 = this->tris[this->getIdx(i + node.firstPrim)].uv3;
+
             Interaction siIntermediate = this->rayTriangleIntersect(
-                ray,
-                this->tris[this->getIdx(i + node.firstPrim)].v1,
-                this->tris[this->getIdx(i + node.firstPrim)].v2,
-                this->tris[this->getIdx(i + node.firstPrim)].v3,
-                this->tris[this->getIdx(i + node.firstPrim)].normal
-            );
+                ray, v1, v2, v3, normal);
+
             if (siIntermediate.t <= ray.t && siIntermediate.didIntersect) {
                 si = siIntermediate;
                 ray.t = si.t;
+
+                // Barycentric interpolation of UV coordinates
+                float triArea = 0.5f * Cross(v2 - v1, v3 - v1).Length();
+                float alpha = 0.5f * Cross(si.p - v2, v3 - v2).Length() / triArea;
+                float gamma = 0.5f * Cross(si.p - v2, v1 - v2).Length() / triArea;
+                float beta = 0.5f * Cross(si.p - v1, v3 - v1).Length() / triArea;
+                Vector2f uv = alpha * uv1 +
+                    beta * uv2 +
+                    gamma * uv3;
+                uv.x = std::min(std::max(uv.x, 0.f), 1.f);
+                uv.y = std::min(std::max(uv.y, 0.f), 1.f);
+                si.uv = uv;
+
+                si.bsdf = &this->bsdf;
+
+                // TODO: Obtain the ONB and store in interaction here
+
+                // Set the view direction in local coordinates
+                // TODO: Uncomment this after implementing ONB
+                // si.wi = si.toLocal(-ray.d);
             }
         }
     }

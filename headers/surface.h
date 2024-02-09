@@ -2,6 +2,7 @@
 
 #include "common.h"
 #include "texture.h"
+#include "bsdf.h"
 
 struct Tri {
     Vector3f v1, v2, v3;
@@ -23,14 +24,10 @@ struct Surface {
     std::vector<Tri> tris;
     std::vector<uint32_t> triIdxs;
     AABB bbox;
+    BSDF bsdf;
 
     bool isLight;
     uint32_t shapeIdx;
-
-    Vector3f diffuse;
-    float alpha;
-
-    Texture diffuseTexture, alphaTexture;
 
     void buildBVH();
     uint32_t getIdx(uint32_t idx);
@@ -41,10 +38,6 @@ struct Surface {
     Interaction rayPlaneIntersect(Ray ray, Vector3f p, Vector3f n);
     Interaction rayTriangleIntersect(Ray ray, Vector3f v1, Vector3f v2, Vector3f v3, Vector3f n);
     Interaction rayIntersect(Ray& ray);
-
-private:
-    bool hasDiffuseTexture();
-    bool hasAlphaTexture();
 };
 
 std::vector<Surface> createSurfaces(std::string pathToObj, bool isLight, uint32_t shapeIdx);

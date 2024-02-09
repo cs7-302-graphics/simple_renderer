@@ -70,6 +70,36 @@ void Scene::parse(std::string sceneDirectory, nlohmann::json sceneConfig)
         exit(1);
     }
 
+    // Point Lights
+    try {
+        auto pointLights = sceneConfig["pointLights"];
+        for (auto l : pointLights)
+            this->lights.push_back(Light(LightType::POINT_LIGHT, l));
+    }
+    catch (nlohmann::json::exception e) {
+        std::cerr << "No point lights defined." << std::endl;
+    }
+
+    // Directional Lights
+    try {
+        auto directionalLights = sceneConfig["directionalLights"];
+        for (auto l : directionalLights)
+            this->lights.push_back(Light(LightType::DIRECTIONAL_LIGHT, l));
+    }
+    catch (nlohmann::json::exception e) {
+        std::cerr << "No directional lights defined." << std::endl;
+    }
+
+    // Area lights
+    try {
+        auto areaLights = sceneConfig["areaLights"];
+        for (auto l : areaLights)
+            this->lights.push_back(Light(LightType::AREA_LIGHT, l));
+    }
+    catch (nlohmann::json::exception e) {
+        std::cerr << "No area lights defined." << std::endl;
+    }
+
     // Surface
     try {
         auto surfacePaths = sceneConfig["surface"];
@@ -213,7 +243,7 @@ void Scene::intersectBVH(uint32_t nodeIdx, Ray &ray, Interaction& si)
         // Leaf
         for (uint32_t i = 0; i < node.primCount; i++) {
             Interaction siIntermediate = this->surfaces[this->getIdx(i + node.firstPrim)].rayIntersect(ray);
-            if (siIntermediate.t <= ray.t) {
+            if (siIntermediate.t <= ray.t && siIntermediate.didIntersect) {
                 si = siIntermediate;
                 ray.t = si.t;
             }
@@ -231,6 +261,24 @@ Interaction Scene::rayIntersect(Ray& ray)
     si.didIntersect = false;
 
     this->intersectBVH(0, ray, si);
+
+    return si;
+}
+
+/**
+ * Checks if a given ray intersects with any of the emitters in the scene.
+*/
+Interaction Scene::rayEmitterIntersect(Ray& ray) {
+    Interaction si;
+    si.didIntersect = false;
+
+    for (Light &light : this->lights) {
+        Interaction siIntermediate = light.intersectLight(&ray);
+        if (siIntermediate.t <= ray.t && siIntermediate.didIntersect) {
+            si = siIntermediate;
+            ray.t = si.t;
+        }
+    }
 
     return si;
 }

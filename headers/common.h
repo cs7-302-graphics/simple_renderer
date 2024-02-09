@@ -6,8 +6,11 @@
 #include <fstream>
 #include <chrono>
 #include <cmath>
+#include <bitset>
 
 #include "vec.h"
+#include "random.h"
+#include "interaction.h"
 
 #include "json/include/nlohmann/json.hpp"
 
@@ -21,12 +24,6 @@ struct Ray {
 
     Ray(Vector3f origin, Vector3f direction, float t = 1e30f, float tmax = 1e30f)
         : o(origin), d(direction), t(t), tmax(tmax) {};
-};
-
-struct Interaction {
-    Vector3f p, n;
-    float t = 1e30f;
-    bool didIntersect = false;
 };
 
 struct AABB {

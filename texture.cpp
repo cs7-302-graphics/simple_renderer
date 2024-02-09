@@ -8,6 +8,17 @@
 #define TINYEXR_IMPLEMENTATION
 #include "tinyexr/tinyexr.h"
 
+float gammaTransform(float val) {
+    // Uncomment below to disable gamma transform during debugging
+    // return val;
+
+    float transformed = std::pow(val, 1 / 2.2);
+    float clamped = std::min(transformed, 1.0f);
+    clamped = std::max(clamped, 0.0f);
+
+    return clamped;
+}
+
 Texture::Texture(std::string pathToImage)
 {
     size_t pos = pathToImage.find(".exr");
@@ -42,32 +53,20 @@ void Texture::allocate(TextureType type, Vector2i resolution)
     }
 }
 
-void Texture::writePixelColor(Vector3f color, int x, int y)
+
+
+
+Vector3f Texture::nearestNeighbourFetch(Vector2f uv)
 {
-    if (this->type == TextureType::UNSIGNED_INTEGER_ALPHA) {
-        uint32_t* dpointer = (uint32_t*)this->data;
-
-        uint32_t r = static_cast<uint32_t>(std::min(color.x * 255.0f, 255.f));
-        uint32_t g = static_cast<uint32_t>(std::min(color.y * 255.0f, 255.f)) << 8;
-        uint32_t b = static_cast<uint32_t>(std::min(color.z * 255.0f, 255.f)) << 16;
-        uint32_t a = 255 << 24;
-
-        uint32_t final = r | g | b | a;
-
-        dpointer[y * this->resolution.x + x] = final;
-    }
-}
-
-/*
-Reads the color defined at integer coordinates 'x,y'.
-The top left corner of the texture is mapped to '0,0'.
-*/
-Vector3f Texture::loadPixelColor(int x, int y) {
     Vector3f rval(0.f, 0.f, 0.f);
+
+    int xIndex = (int) std::floor(uv.x * (this->resolution.x - 1));
+    int yIndex = (int) std::floor(uv.y * (this->resolution.y - 1));
+
     if (this->type == TextureType::UNSIGNED_INTEGER_ALPHA) {
         uint32_t* dpointer = (uint32_t*)this->data;
 
-        uint32_t val = dpointer[y * this->resolution.x + x];
+        uint32_t val = dpointer[yIndex * this->resolution.x + xIndex];
         uint32_t r = (val >> 0) & 255u;
         uint32_t g = (val >> 8) & 255u;
         uint32_t b = (val >> 16) & 255u;
@@ -78,6 +77,32 @@ Vector3f Texture::loadPixelColor(int x, int y) {
     }
 
     return rval;
+}
+
+
+
+
+
+void Texture::writePixelColor(Vector3f color, int x, int y)
+{
+    if (this->type == TextureType::UNSIGNED_INTEGER_ALPHA) {
+        uint32_t* dpointer = (uint32_t*)this->data;
+
+        uint32_t r = static_cast<uint32_t>(gammaTransform(color.x) * 255.0f);
+        uint32_t g = static_cast<uint32_t>(gammaTransform(color.y) * 255.0f) << 8;
+        uint32_t b = static_cast<uint32_t>(gammaTransform(color.z) * 255.0f) << 16;
+        uint32_t a = 255 << 24;
+
+        uint32_t final = r | g | b | a;
+
+        dpointer[y * this->resolution.x + x] = final;
+    } else {
+        float *dpointer = (float *)this->data;
+        dpointer[y * resolution.x * 4 + x * 4 + 0] = color.x;
+        dpointer[y * resolution.x * 4 + x * 4 + 1] = color.y;
+        dpointer[y * resolution.x * 4 + x * 4 + 2] = color.z;
+        dpointer[y * resolution.x * 4 + x * 4 + 3] = 1.f;
+    }
 }
 
 void Texture::loadJpg(std::string pathToJpg)

@@ -19,7 +19,8 @@ struct Texture {
 
     void allocate(TextureType type, Vector2i resolution);
     void writePixelColor(Vector3f color, int x, int y);
-    Vector3f loadPixelColor(int x, int y);
+
+    Vector3f nearestNeighbourFetch(Vector2f uv);
     
     void loadJpg(std::string pathToJpg);
     void loadPng(std::string pathToPng);

@@ -6,8 +6,6 @@ project(cs7302
   LANGUAGES C CXX
 )
 
-set(OptiX_ROOT_DIR "C:/ProgramData/NVIDIA Corporation/OptiX SDK 7.4.0/")
-
 if (APPLE)
 	set(CMAKE_MACOSX_RPATH ON)
 endif()
@@ -42,8 +40,10 @@ include_directories(
 add_executable(render
 	render.cpp
 
-	scene.cpp
+	bsdf.cpp
 	camera.cpp
+	light.cpp
+	scene.cpp
 	surface.cpp
 	texture.cpp
 
